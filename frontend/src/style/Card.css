@@ -1,0 +1,62 @@
+.Card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  margin-bottom: 16px;
+  max-width: 100%;
+  transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+  cursor: grab;
+  user-select: none;
+  transform-origin: center;
+  overflow: hidden;
+  word-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.Card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.Card:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.Card.dragging {
+  transform: scale(0.75) rotate(3deg);
+  opacity: 0.8;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  cursor: grabbing;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.Card .text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.Card.scrollable {
+  max-height: 600px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.Card.scrollable::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.8));
+  pointer-events: none;
+}
