@@ -1,11 +1,11 @@
-import React, { CSSProperties, useRef, useState } from 'react';
+import React, { CSSProperties, useCallback, useRef, useState } from 'react';
 import '../style/Card.css';
 
 interface CardType {
     text: string,
-    onDragStart?: (event: MouseEvent | TouchEvent) => void;
-    onDragEnd?: (event: MouseEvent | TouchEvent) => void;
-    onDrop?: (dropTarget: Element, event: MouseEvent | TouchEvent) => void;
+    onDragStart?: (event: MouseEvent) => void;
+    onDragEnd?: (event: MouseEvent) => void;
+    onDrop?: (dropTarget: Element, event: MouseEvent) => void;
     className?: string;
 }
 
@@ -19,66 +19,71 @@ function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
     const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
     const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
     const cardRef = useRef<HTMLDivElement>(null);
-    const dragStartPos = useRef<Position>({ x: 0, y: 0 });
+    const dragDataRef = useRef({
+    startPos: { x: 0, y: 0 },
+    offset: { x: 0, y: 0 },
+    hasMoved: false
+    });
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!cardRef.current) return;
-
+        
         const rect = cardRef.current.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left;
-        const offsetY = e.clientY - rect.top;
 
-        setDragOffset({ x: offsetX, y: offsetY });
-        dragStartPos.current = { x: e.clientX, y: e.clientY };
-
+        dragDataRef.current = {
+        startPos: { x: e.clientX, y: e.clientY },
+        offset: { x: e.clientX - rect.left, y: e.clientY - rect.top },
+        hasMoved: false
+        };
+        
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
         e.preventDefault();
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-        const X = e.clientX - dragStartPos.current.x;
-        const Y = e.clientY - dragStartPos.current.y;
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        const deltaX = e.clientX - dragDataRef.current.startPos.x;
+        const deltaY = e.clientY - dragDataRef.current.startPos.y;
 
-        if (!isDragging && (Math.abs(X) > 10 || Math.abs(Y) > 10)) {
-            setIsDragging(true);
-            onDragStart?.(e);
+        if (!dragDataRef.current.hasMoved && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+        dragDataRef.current.hasMoved = true;
+        setIsDragging(true);
+        onDragStart?.(e);
         }
 
-        if (isDragging || Math.abs(X) > 10 || Math.abs(Y) > 10) {
-            setPosition({
-                x: e.clientX - dragOffset.x,
-                y: e.clientY - dragOffset.y
-            });
+        if (dragDataRef.current.hasMoved) {
+        setPosition({
+            x: e.clientX,
+            y: e.clientY
+        });
         }
-    };
+    }, [onDragStart]);
 
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleMouseUp = useCallback((e: MouseEvent) => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
         
-        if (isDragging) {
-        // check drop target
-        const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
-        const dropTarget = elementsBelow.find(el => el.classList.contains('drop-target'));
-        
-        if (dropTarget) {
-            onDrop?.(dropTarget, e);
+        if (dragDataRef.current.hasMoved) {
+            // Check drop target
+            const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
+            const dropTarget = elementsBelow.find(el => el.classList.contains('drop-target'));
+            
+            if (dropTarget) {
+                onDrop?.(dropTarget, e);
+            }
+            
+            onDragEnd?.(e);
         }
-        
-        onDragEnd?.(e);
-        }
-
         setIsDragging(false);
         setPosition({ x: 0, y: 0 });
-    };
+        dragDataRef.current.hasMoved = false;
+    }, [handleMouseMove, onDragEnd, onDrop]);
 
     const cardStyle: CSSProperties = {
-        position: isDragging ? 'fixed' : 'relative',
-        left: isDragging ? `${position.x}px` : 'auto',
-        top: isDragging ? `${position.y}px` : 'auto',
-        zIndex: isDragging ? 1000 : 'auto',
-        pointerEvents: isDragging ? 'none' : 'auto',
+    position: isDragging ? 'fixed' : 'relative',
+    left: isDragging ? `${position.x}px` : 'auto',
+    top: isDragging ? `${position.y}px` : 'auto',
+    transform: isDragging ? 'translate(-50%, -50%)' : undefined
     };
 
     return (
