@@ -1,4 +1,4 @@
-import '../style/CategoryCard.css'
+import '../style/CategoryCollection.css'
 import CategoryCard from './CategoryCard';
 
 type DropHandler = (event: MouseEvent) => void;
@@ -11,11 +11,19 @@ function CategoryCollection({ registerDropHandler }: CategoryCollectionProps) {
   return (
     <div className='category-collection'>
         <CategoryCard 
-            text='OOF' 
+            text='Harmfull' 
             registerDropHandler={registerDropHandler}
         />
         <CategoryCard 
-            text='SAD' 
+            text='Harmless' 
+            registerDropHandler={registerDropHandler}
+        />
+        <CategoryCard 
+            text='Gibberish' 
+            registerDropHandler={registerDropHandler}
+        />
+        <CategoryCard 
+            text='Error' 
             registerDropHandler={registerDropHandler}
         />
     </div>

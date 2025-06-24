@@ -1,32 +1,32 @@
 .category {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  padding: 24px;
-  margin-bottom: 16px;
-  max-width: 50%;
-  transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
-  cursor: grab;
-  user-select: none;
-  transform-origin: center;
-  overflow: hidden;
-  word-wrap: break-word;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  margin: auto;
-  transition: background-color 0.5s ease-out;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+    cursor: grab;
+    user-select: none;
+    transform-origin: center;
+    overflow: hidden;
+    word-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: auto;
+    transition: background-color 0.5s ease-out;
+    width: 75%;
+    margin: 5pt;
 }
 
 @keyframes hover-fade {
-  0% {
-    background-color: #8FD694;
-  }
-  100% {
-    background-color: transparent;
-  }
+    0% {
+      background: #569cd6;
+    }
+    100% {
+      background-color: transparent;
+    }
 }
 
 .hover-add {
-    background-color: #8FD694;
+    background: #569cd6;
 }
