@@ -19,6 +19,7 @@ function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
     const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
     const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
     const cardRef = useRef<HTMLDivElement>(null);
+    const prevDropTargetRef = useRef<Element | null>(null);
     const dragDataRef = useRef({
     startPos: { x: 0, y: 0 },
     offset: { x: 0, y: 0 },
@@ -52,10 +53,23 @@ function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
         }
 
         if (dragDataRef.current.hasMoved) {
-        setPosition({
-            x: e.clientX,
-            y: e.clientY
-        });
+            const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
+            const dropTarget = elementsBelow.find(el => el.classList.contains('drop-target'));
+
+            if (prevDropTargetRef.current && prevDropTargetRef.current !== dropTarget) {
+                prevDropTargetRef.current.classList.remove('hover');
+            }
+
+            if (dropTarget) {
+                dropTarget.classList.add('hover');
+                prevDropTargetRef.current = dropTarget;
+            } else {
+                prevDropTargetRef.current = null;
+            }
+            setPosition({
+                x: e.clientX,
+                y: e.clientY
+            });
         }
     }, [onDragStart]);
 
@@ -69,7 +83,6 @@ function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
             const dropTarget = elementsBelow.find(el => el.classList.contains('drop-target'));
             
             if (dropTarget) {
-                console.log(dropTarget);
                 onDrop?.(dropTarget, e);
             }
             

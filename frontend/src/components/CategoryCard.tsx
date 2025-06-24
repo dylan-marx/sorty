@@ -3,11 +3,11 @@ import '../style/CategoryCard.css'
 
 interface CategoryCardProps {
   registerDropHandler: (id: string, handler: (event: any) => void) => void;
-  dropped?: boolean;
+  hovered?: boolean;
   text?: string;
 }
 
-function CategoryCard({ registerDropHandler, dropped, text }: CategoryCardProps) {
+function CategoryCard({ registerDropHandler, hovered, text }: CategoryCardProps) {
   useEffect(() => {
     if (text) {
       const onDrop = (event: MouseEvent) => {
