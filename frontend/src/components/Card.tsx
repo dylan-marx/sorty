@@ -69,6 +69,7 @@ function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
             const dropTarget = elementsBelow.find(el => el.classList.contains('drop-target'));
             
             if (dropTarget) {
+                console.log(dropTarget);
                 onDrop?.(dropTarget, e);
             }
             
