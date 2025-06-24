@@ -57,11 +57,11 @@ function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
             const dropTarget = elementsBelow.find(el => el.classList.contains('drop-target'));
 
             if (prevDropTargetRef.current && prevDropTargetRef.current !== dropTarget) {
-                prevDropTargetRef.current.classList.remove('hover');
+                prevDropTargetRef.current.classList.remove('hover-add');
             }
 
             if (dropTarget) {
-                dropTarget.classList.add('hover');
+                dropTarget.classList.add('hover-add');
                 prevDropTargetRef.current = dropTarget;
             } else {
                 prevDropTargetRef.current = null;

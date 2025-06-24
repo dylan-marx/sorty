@@ -1,18 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import '../style/CategoryCard.css'
 
 interface CategoryCardProps {
   registerDropHandler: (id: string, handler: (event: any) => void) => void;
-  hovered?: boolean;
   text?: string;
 }
 
-function CategoryCard({ registerDropHandler, hovered, text }: CategoryCardProps) {
+function CategoryCard({ registerDropHandler, text }: CategoryCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (text) {
-      const onDrop = (event: MouseEvent) => {
+    if (text && cardRef.current) {
+      const onDrop = (event: DragEvent) => {
         console.log(`FOUND => ${text}`);
-        // Add your drop logic here
+        if (cardRef.current) {
+
+          cardRef.current.classList.remove('hover-add');
+
+        }
       };
       
       registerDropHandler(text, onDrop);
@@ -20,7 +25,7 @@ function CategoryCard({ registerDropHandler, hovered, text }: CategoryCardProps)
   }, [registerDropHandler, text]);
 
   return (
-    <div className='category drop-target' data-category-text={text}>
+    <div ref={cardRef} className='category drop-target' data-category-text={text}>
       {text}
     </div>
   );

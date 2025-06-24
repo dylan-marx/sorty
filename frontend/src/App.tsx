@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import Card from './components/Card';
 import './style/App.css';
-import CategoryCard from './components/CategoryCard';
+import CategoryCollection from './components/CategoryCollection';
 
 type DropHandler = (event: MouseEvent) => void;
 type DropHandlers = Record<string, DropHandler>;
@@ -26,15 +26,7 @@ function App() {
 
   return (
     <>
-      <div className="App">
-        <CategoryCard 
-          text='OOF' 
-          registerDropHandler={registerDropHandler}
-        />
-        <CategoryCard 
-          text='SAD' 
-          registerDropHandler={registerDropHandler}
-        />
+        <CategoryCollection registerDropHandler={registerDropHandler} />
         <Card 
           text='# The Illusion of Progress in Modern Technology
  Technology advances rapidly—faster processors, smarter AI, thinner phones. But are these truly signs of progress?
@@ -48,7 +40,6 @@ function App() {
  The narrative of progress is seductive, but needs scrutiny. Not all innovation is improvement. True progress should enhance autonomy, not undermine it.' 
           onDrop={handleDrop}
         />
-      </div>
     </>
   );
 }

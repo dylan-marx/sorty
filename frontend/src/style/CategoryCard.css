@@ -15,7 +15,18 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: auto;
+  transition: background-color 0.5s ease-out;
 }
-.hover {
-    background-color: rgba(0, 0, 255, 0.253);
+
+@keyframes hover-fade {
+  0% {
+    background-color: #8FD694;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.hover-add {
+    background-color: #8FD694;
 }
