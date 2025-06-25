@@ -8,6 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 current_row_index = 0
+current_column_index = 1
 csv_data = None
 total_rows = 0
 columns = []
@@ -38,6 +39,7 @@ def load_csv_data(csv_file_path):
     except Exception as e:
         print(f"Error loading CSV: {e}")
         return False
+    
 
 @app.route('/api/get-categories', methods=['GET'])
 def get_categories():
@@ -115,6 +117,55 @@ def get_status():
         'columns': columns if csv_data is not None else [],
         'total_columns': len(columns) if csv_data is not None else 0
     })
+
+@app.route('/api/next-cell', methods=['GET'])
+def get_next_cell():
+    global current_row_index, current_column_index, csv_data, total_rows, total_columns, columns
+    
+    total_columns = len(columns)
+    if csv_data is None:
+        return jsonify({
+            'error': 'No CSV data loaded. Please load a CSV file first.'
+        }), 400
+    
+    if current_row_index >= total_rows:
+        return jsonify({
+            'error': 'No more data available',
+            'message': 'All cells have been served'
+        }), 404
+
+
+    row = csv_data.iloc[current_row_index]
+    column_name = columns[current_column_index]
+    
+    
+    # Handle NaN values
+    value = row[column_name]
+    if pd.isna(value):
+        cell_value = None
+    else:
+        cell_value = str(value)
+
+    
+    response_data = {
+        'id': str(row['id']),
+        'row_number': current_row_index + 1,
+        'column_number': current_column_index + 1,
+        'column_name': column_name,
+        'cell_value': cell_value,
+        'total_rows': total_rows,
+        'total_columns': total_columns,
+        'has_more_columns': current_column_index + 1 < total_columns,
+        'has_more_rows': current_row_index + 1 < total_rows
+    }
+
+    if current_column_index + 1 < total_columns:
+        current_column_index += 1
+    else:
+        current_row_index += 1
+        current_column_index = 1
+    
+    return jsonify(response_data)
 
 if __name__ == '__main__':
     load_categories()

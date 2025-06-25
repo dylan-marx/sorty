@@ -4,6 +4,7 @@ import '../style/CategoryCard.css'
 interface CategoryCardProps {
   registerDropHandler: (id: string, handler: (event: any) => void) => void;
   text?: string;
+  id?: string;
 }
 
 function CategoryCard({ registerDropHandler, text }: CategoryCardProps) {

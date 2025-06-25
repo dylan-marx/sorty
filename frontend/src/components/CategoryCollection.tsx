@@ -9,7 +9,7 @@ interface CategoryCollectionProps {
   id?: string;
 }
 
-function CategoryCollection({ categories, registerDropHandler }: CategoryCollectionProps) {
+function CategoryCollection({ categories, id, registerDropHandler }: CategoryCollectionProps) {
   const defaultCategories = ['Yes', 'No'];
   const categoryList = categories ?? defaultCategories;
   return (
@@ -18,6 +18,7 @@ function CategoryCollection({ categories, registerDropHandler }: CategoryCollect
         <CategoryCard 
           key={category}
           text={category}
+          id={id}
           registerDropHandler={registerDropHandler}
         />
       ))}
