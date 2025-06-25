@@ -18,6 +18,7 @@ body {
 
 .flex-container {
     display: flex;
+    justify-content: space-between;
 }
 
 .category-collection-container {
@@ -25,7 +26,7 @@ body {
 }
 
 .card-container {
-    width: 75%;
+    width: 50%;
 }
 
 .header {
@@ -43,4 +44,33 @@ body {
     background-color: rgba(86, 156, 214, 0.9);
     backdrop-filter: blur(8px);
     font-size: xx-large;
+    display: flex;
+    justify-content: space-between;
+}
+
+.data-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 5pt;
+        padding: 24px;
+    width: 15%;
+    margin: 0 5pt 5pt;
+    margin-top: 15pt;
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid #383838;
+    border-left: 4px solid #569cd6;
+    background: #252526;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    color: #d4d4d4;
+    font-family: 'IBM Plex Mono', -apple-system, monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    transition: all 0.2s ease-out;
+    cursor: grab;
+    user-select: none;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

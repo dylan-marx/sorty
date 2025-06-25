@@ -1,8 +1,8 @@
 .Card {
     padding: 24px;
-    margin: 0 auto 5pt;
+    margin: 0 auto 2pt;
     margin-top: 15pt;
-    max-width: 75%;
+    max-width: 100%;
     border-radius: 8px;
     border: 1px solid #383838;
     border-left: 4px solid #569cd6;

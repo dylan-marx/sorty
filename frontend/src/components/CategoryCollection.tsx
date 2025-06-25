@@ -5,27 +5,22 @@ type DropHandler = (event: MouseEvent) => void;
 
 interface CategoryCollectionProps {
   registerDropHandler: (text: string, handler: DropHandler) => void;
+  categories?: string[];
+  id?: string;
 }
 
-function CategoryCollection({ registerDropHandler }: CategoryCollectionProps) {
+function CategoryCollection({ categories, registerDropHandler }: CategoryCollectionProps) {
+  const defaultCategories = ['Yes', 'No'];
+  const categoryList = categories ?? defaultCategories;
   return (
     <div className='category-collection'>
+      {categoryList.map((category) => (
         <CategoryCard 
-            text='Harmfull' 
-            registerDropHandler={registerDropHandler}
+          key={category}
+          text={category}
+          registerDropHandler={registerDropHandler}
         />
-        <CategoryCard 
-            text='Harmless' 
-            registerDropHandler={registerDropHandler}
-        />
-        <CategoryCard 
-            text='Gibberish' 
-            registerDropHandler={registerDropHandler}
-        />
-        <CategoryCard 
-            text='Error' 
-            registerDropHandler={registerDropHandler}
-        />
+      ))}
     </div>
   );
 }

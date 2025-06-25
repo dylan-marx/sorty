@@ -1,3 +1,4 @@
+import json
 from flask import Flask, jsonify
 from flask_cors import CORS
 import pandas as pd
@@ -10,6 +11,19 @@ current_row_index = 0
 csv_data = None
 total_rows = 0
 columns = []
+categories = []
+
+def load_categories():
+    global categories
+    try:
+        with open('config.json', 'r') as file:
+            data = json.load(file)
+        
+        categories = data
+        print(data['categories'])
+        return True
+    except Exception as e:
+        return False
 
 def load_csv_data(csv_file_path):
     global csv_data, total_rows, current_row_index, columns
@@ -24,6 +38,18 @@ def load_csv_data(csv_file_path):
     except Exception as e:
         print(f"Error loading CSV: {e}")
         return False
+
+@app.route('/api/get-categories', methods=['GET'])
+def get_categories():
+    global categories
+    
+    if categories is None:
+        return jsonify({
+            'error': 'No categories found. Please load a config.json file'
+        }), 400
+    
+    return jsonify(categories)
+    
 
 @app.route('/api/next-row', methods=['GET'])
 def get_next_row():
@@ -91,6 +117,7 @@ def get_status():
     })
 
 if __name__ == '__main__':
+    load_categories()
     default_csv_path = './data/data.csv'
     if os.path.exists(default_csv_path):
         load_csv_data(default_csv_path)
