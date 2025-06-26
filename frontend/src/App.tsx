@@ -17,6 +17,9 @@ function App() {
   const [categories, setCategories] = useState<string[]>([]);
   const [cardID, setCardID] = useState<string>('');
   const [columnName, setColumnName] = useState<string>('');
+  const [columnNumber, setColumnNumber] = useState<string>('');
+  const [rowNumber, setRowNumber] = useState<string>('');
+  const [currentEntry, setCurrentEntry] = useState<string>('');
   const [cardText, setCardText] = useState<string>('');
 
   const fetchCell = async () => {
@@ -39,12 +42,21 @@ function App() {
       setCardID(data.id);
       setColumnName(data.column_name);
       setCardText(data.cell_value);
+      setColumnNumber(data.column_number);
+      setRowNumber(data.row_number);
     } catch (error) {
       console.error('Error fetching cell:', error);
     } finally {
       isFetchingRef.current = false;
     }
   };
+
+  useEffect(() => {
+
+    const currentEntryNumber = (Number(rowNumber) - 1) * Number(totalColumns) + Number(columnNumber);
+    setCurrentEntry(String(currentEntryNumber-1));
+    console.log('Current entry:', currentEntryNumber);
+  }, [rowNumber, columnNumber, totalColumns])
 
   useEffect(() => {
     if (hasFetchedRef.current) return; // Prevent multiple calls
@@ -102,6 +114,7 @@ function App() {
     const categoryText = dropTarget.getAttribute('data-category-text');
     if (categoryText && dropHandlers[categoryText]) {
       dropHandlers[categoryText](event);
+      fetchCell();
     }
   }, [dropHandlers]);
 
@@ -114,7 +127,7 @@ function App() {
       </div>
       <div className='flex-container'>
         <div className='category-collection-container'>
-          <CategoryCollection id={cardID} categories={categories} registerDropHandler={registerDropHandler} />
+          <CategoryCollection id={cardID} columnName={columnName} categories={categories} registerDropHandler={registerDropHandler} />
         </div>
         <div className='card-container'>
           <Card
@@ -127,8 +140,11 @@ function App() {
           <div>Rows: {totalRows}</div>
           <div>Columns: {totalColumns}</div>
           <div>Total Entries: {totalEntries}</div>
+          <div>Curret Entry: {currentEntry}</div>
         </div>
+        
       </div>
+      <progress value={Number(currentEntry) / (totalEntries || 1)} />
     </>
   );
 }

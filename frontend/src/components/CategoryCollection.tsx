@@ -7,9 +7,10 @@ interface CategoryCollectionProps {
   registerDropHandler: (text: string, handler: DropHandler) => void;
   categories?: string[];
   id?: string;
+  columnName?: string;
 }
 
-function CategoryCollection({ categories, id, registerDropHandler }: CategoryCollectionProps) {
+function CategoryCollection({ categories, id, columnName, registerDropHandler }: CategoryCollectionProps) {
   const defaultCategories = ['Yes', 'No'];
   const categoryList = categories ?? defaultCategories;
   return (
@@ -19,6 +20,7 @@ function CategoryCollection({ categories, id, registerDropHandler }: CategoryCol
           key={category}
           text={category}
           id={id}
+          columnName={columnName}
           registerDropHandler={registerDropHandler}
         />
       ))}
