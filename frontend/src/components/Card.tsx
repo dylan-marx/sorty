@@ -7,6 +7,8 @@ interface CardType {
     onDragEnd?: (event: MouseEvent) => void;
     onDrop?: (dropTarget: Element, event: MouseEvent) => void;
     className?: string;
+    columnName?: string;
+    id?: string;
 }
 
 interface Position {
@@ -14,7 +16,7 @@ interface Position {
   y: number;
 }
 
-function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
+function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnName}: CardType) {
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
     const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
@@ -111,7 +113,14 @@ function Card({text, onDragStart, onDragEnd, onDrop, className=''}: CardType) {
             isDragging ? 
                 <div className="text">...</div> 
                 :
-                <div className="text">{text}</div>
+                <div>
+                    <div className="card-header">
+                        <span className="card-id">#{id}</span>
+                        <span className="card-column">{columnName}</span>
+                    </div>
+                    <div className="text">{text}</div>
+                </div>
+
             }
         </div>
     );

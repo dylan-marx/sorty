@@ -15,6 +15,7 @@ function CategoryCollection({ categories, id, columnName, registerDropHandler }:
   const categoryList = categories ?? defaultCategories;
   return (
     <div className='category-collection'>
+      <div className='category-header'>Categories</div>
       {categoryList.map((category) => (
         <CategoryCard 
           key={category}

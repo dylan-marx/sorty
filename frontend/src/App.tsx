@@ -115,8 +115,6 @@ function App() {
     <>
       <div className='header'>
         Data Classifier
-        col: {columnName}
-        id: {cardID}
       </div>
       <div className='flex-container'>
         <div className='category-collection-container'>
@@ -124,20 +122,57 @@ function App() {
         </div>
         <div className='card-container'>
           <Card
+            id={cardID}
+            columnName={columnName}
             text={cardText}
             onDrop={handleDrop}
           />
         </div>
         <div className='data-stats'>
-          <div className='api-status'>Data Status: {apiStatus}</div>
-          <div>Rows: {totalRows}</div>
-          <div>Columns: {totalColumns}</div>
-          <div>Total Entries: {totalEntries}</div>
-          <div>Curret Entry: {currentEntry}</div>
+            <div className='api-status'>{apiStatus}</div>
+            <div className='stat-item'>
+              <span className='stat-label'>Rows:</span>
+              <span className='stat-value'>{totalRows || '—'}</span>
+            </div>
+
+            <div className='stat-item'>
+              <span className='stat-label'>Columns:</span>
+              <span className='stat-value'>{totalColumns || '—'}</span>
+            </div>
+
+            <div className='stat-item'>
+              <span className='stat-label'>Total Entries:</span>
+              <span className='stat-value'>{totalEntries || '—'}</span>
+            </div>
+
+            <div className='stat-item'>
+              <span className='stat-label'>Current Entry:</span>
+              <span className='stat-value'>{currentEntry || '—'}</span>
+            </div>
+
+            <div className='stat-item'>
+              <span className='stat-label'>Column Name:</span>
+              <span className='stat-value'>{columnName || '—'}</span>
+            </div>
+
+            <div className='stat-item'>
+              <span className='stat-label'>ID:</span>
+              <span className='stat-value'>{cardID || '—'}</span>
+            </div>
         </div>
         
       </div>
-      <progress value={Number(currentEntry) / (totalEntries || 1)} />
+      <div style={{ position: 'relative', width: '100%' }}>
+        <div>
+          <progress className='progress'
+          value={Number(currentEntry) / (totalEntries || 1)}/>
+        </div>
+
+        <span className='progress-percentage'>
+          {Math.round((Number(currentEntry) / (totalEntries || 1)) * 100)}%
+        </span>
+      </div>
+
     </>
   );
 }
