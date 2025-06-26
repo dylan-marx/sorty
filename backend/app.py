@@ -228,7 +228,7 @@ def classify_data():
 
 @app.route('/api/next-cell', methods=['GET'])
 def get_next_cell():
-    global current_row_index, current_column_index, csv_data, total_rows, total_columns, columns
+    global csv_data, total_rows, columns, out_csv
     
     total_columns = len(columns)
     if csv_data is None:
@@ -236,41 +236,63 @@ def get_next_cell():
             'error': 'No CSV data loaded. Please load a CSV file first.'
         }), 400
     
-    if current_row_index >= total_rows:
+    if out_csv is None:
         return jsonify({
-            'error': 'No more data available',
-            'message': 'All cells have been served'
-        }), 404
-
-    row = csv_data.iloc[current_row_index]
-    column_name = columns[current_column_index]
+            'error': 'No output CSV loaded. Please load output CSV first.'
+        }), 400
     
-    # Handle NaN values
-    value = row[column_name]
-    if pd.isna(value):
-        cell_value = None
-    else:
-        cell_value = str(value)
-
-    response_data = {
-        'id': str(row['id']),
-        'row_number': current_row_index + 1,
-        'column_number': current_column_index + 1,
-        'column_name': column_name,
-        'cell_value': cell_value,
-        'total_rows': total_rows,
-        'total_columns': total_columns,
-        'has_more_columns': current_column_index + 1 < total_columns,
-        'has_more_rows': current_row_index + 1 < total_rows
-    }
-
-    if current_column_index + 1 < total_columns:
-        current_column_index += 1
-    else:
-        current_row_index += 1
-        current_column_index = 1
+    # Function to check if a cell is already classified
+    def is_cell_classified(row_idx, col_name):
+        if col_name == 'id':  # Skip ID column - it's not for classification
+            return True
+        
+        try:
+            row_id = str(csv_data.iloc[row_idx]['id'])
+            row_mask = out_csv['id'].astype(str) == row_id
+            if row_mask.any():
+                cell_value = out_csv.loc[row_mask, col_name].iloc[0]
+                # Consider cell classified if it has any non-null value
+                return pd.notna(cell_value) and cell_value != '' and cell_value is not None
+        except:
+            pass
+        return False
     
-    return jsonify(response_data)
+    # Always search from the beginning to find the first unclassified cell
+    for row_idx in range(total_rows):
+        for col_idx in range(total_columns):
+            column_name = columns[col_idx]
+            
+            # Check if current cell is already classified
+            if not is_cell_classified(row_idx, column_name):
+                # Found the first unclassified cell, return it
+                row = csv_data.iloc[row_idx]
+                
+                # Handle NaN values
+                value = row[column_name]
+                if pd.isna(value):
+                    cell_value = None
+                else:
+                    cell_value = str(value)
+
+                response_data = {
+                    'id': str(row['id']),
+                    'row_number': row_idx + 1,
+                    'column_number': col_idx + 1,
+                    'column_name': column_name,
+                    'cell_value': cell_value,
+                    'total_rows': total_rows,
+                    'total_columns': total_columns,
+                    'has_more_columns': col_idx + 1 < total_columns,
+                    'has_more_rows': row_idx + 1 < total_rows
+                }
+
+                return jsonify(response_data)
+    
+    # If we reach here, all cells are classified
+    return jsonify({
+        'error': 'No more unclassified data available',
+        'message': 'All cells have been classified'
+    }), 404
 if __name__ == '__main__':
     load_categories()
     default_csv_path = './data/data.csv'

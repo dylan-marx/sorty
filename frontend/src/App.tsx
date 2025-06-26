@@ -23,32 +23,22 @@ function App() {
   const [cardText, setCardText] = useState<string>('');
 
   const fetchCell = async () => {
-    // Prevent concurrent calls
-    if (isFetchingRef.current) {
-      console.log('Fetch already in progress, skipping...');
-      return;
-    }
-    
-    isFetchingRef.current = true;
-    
     try {
-      let data;
-      do {
-        const res = await fetch('http://localhost:5000/api/next-cell');
-        data = await res.json();
-        console.log('Fetched cell:', data);
-      } while (data.column_name === 'id'); // Skip id columns
-      
-      setCardID(data.id);
-      setColumnName(data.column_name);
-      setCardText(data.cell_value);
-      setColumnNumber(data.column_number);
-      setRowNumber(data.row_number);
-    } catch (error) {
-      console.error('Error fetching cell:', error);
-    } finally {
-      isFetchingRef.current = false;
-    }
+    let data;
+    do {
+      const res = await fetch('http://localhost:5000/api/next-cell');
+      data = await res.json();
+      console.log('Fetched cell:', data);
+    } while (data.column_name === 'id'); // Skip id columns
+    
+    setCardID(data.id);
+    setColumnName(data.column_name);
+    setCardText(data.cell_value);
+    setColumnNumber(data.column_number);
+    setRowNumber(data.row_number);
+  } catch (error) {
+    console.error('Error fetching cell:', error);
+  }
   };
 
   useEffect(() => {
@@ -109,12 +99,15 @@ function App() {
     }));
   }, []);
 
-  const handleDrop = useCallback((dropTarget: Element, event: MouseEvent) => {
-    // Find which category was dropped on
+  const handleDrop = useCallback(async (dropTarget: Element, event: MouseEvent) => {
     const categoryText = dropTarget.getAttribute('data-category-text');
     if (categoryText && dropHandlers[categoryText]) {
-      dropHandlers[categoryText](event);
-      fetchCell();
+      try {
+        await dropHandlers[categoryText](event);
+        await fetchCell();
+      } catch (error) {
+        console.error('Error in drop handling:', error);
+      }
     }
   }, [dropHandlers]);
 
