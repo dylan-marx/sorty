@@ -1,5 +1,5 @@
 import json
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 import os
@@ -13,6 +13,9 @@ csv_data = None
 total_rows = 0
 columns = []
 categories = []
+classifications = []
+
+out_csv = None
 
 def load_categories():
     global categories
@@ -39,7 +42,45 @@ def load_csv_data(csv_file_path):
     except Exception as e:
         print(f"Error loading CSV: {e}")
         return False
+
+def load_out_csv(out_csv_file_path):
+    global out_csv, out_csv_path, csv_data, columns
     
+    out_csv_path = out_csv_file_path
+    
+    try:
+        if os.path.exists(out_csv_file_path):
+            out_csv = pd.read_csv(out_csv_file_path)
+            print(f"Loaded existing output CSV with {len(out_csv)} rows")
+        else:
+            if csv_data is not None:
+                out_csv = pd.DataFrame(columns=columns)
+                out_csv['id'] = csv_data['id'].copy()
+                for col in columns:
+                    if col != 'id':
+                        out_csv[col] = None
+                
+                out_csv.to_csv(out_csv_file_path, index=False)
+                print(f"Created new output CSV with {len(out_csv)} rows")
+            else:
+                print("Cannot create output CSV: no input CSV loaded")
+                return False
+        return True
+    except Exception as e:
+        print(f"Error with output CSV: {e}")
+        return False
+
+def save_out_csv():
+    global out_csv, out_csv_path
+    
+    try:
+        if out_csv is not None and out_csv_path is not None:
+            out_csv.to_csv(out_csv_path, index=False)
+            return True
+        return False
+    except Exception as e:
+        print(f"Error saving output CSV: {e}")
+        return False 
 
 @app.route('/api/get-categories', methods=['GET'])
 def get_categories():
@@ -118,6 +159,73 @@ def get_status():
         'total_columns': len(columns) if csv_data is not None else 0
     })
 
+
+
+@app.route('/api/classify', methods=['POST'])
+@app.route('/api/classify', methods=['POST'])
+def classify_data():
+    global out_csv, csv_data
+    
+    if csv_data is None:
+        return jsonify({
+            'error': 'No CSV data loaded. Please load a CSV file first.'
+        }), 400
+    
+    if out_csv is None:
+        return jsonify({
+            'error': 'No output CSV initialized. Please check output CSV configuration.'
+        }), 400
+    
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'error': 'No data provided in request body'
+            }), 400
+
+        row_id = data.get('id')
+        column_name = data.get('column_name')
+        classification_value = data.get('category')
+        
+        if row_id is None or column_name is None or classification_value is None:
+            return jsonify({
+                'error': 'Missing required fields: id, column_name, and classification_value are required'
+            }), 400
+
+        row_id = str(row_id)
+
+        if column_name not in out_csv.columns:
+            return jsonify({
+                'error': f'Column "{column_name}" does not exist in output CSV'
+            }), 400
+
+        row_mask = out_csv['id'].astype(str) == row_id
+        
+        if not row_mask.any():
+            return jsonify({
+                'error': f'No row found with ID "{row_id}"'
+            }), 404
+        
+        out_csv.loc[row_mask, column_name] = classification_value
+
+        if save_out_csv():
+            return jsonify({
+                'message': 'Classification saved successfully',
+                'id': row_id,
+                'column_name': column_name,
+                'classification_value': classification_value
+            })
+        else:
+            return jsonify({
+                'error': 'Failed to save classification to file'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'error': f'Error processing classification: {str(e)}'
+        }), 500
+
 @app.route('/api/next-cell', methods=['GET'])
 def get_next_cell():
     global current_row_index, current_column_index, csv_data, total_rows, total_columns, columns
@@ -134,10 +242,8 @@ def get_next_cell():
             'message': 'All cells have been served'
         }), 404
 
-
     row = csv_data.iloc[current_row_index]
     column_name = columns[current_column_index]
-    
     
     # Handle NaN values
     value = row[column_name]
@@ -146,7 +252,6 @@ def get_next_cell():
     else:
         cell_value = str(value)
 
-    
     response_data = {
         'id': str(row['id']),
         'row_number': current_row_index + 1,
@@ -166,11 +271,12 @@ def get_next_cell():
         current_column_index = 1
     
     return jsonify(response_data)
-
 if __name__ == '__main__':
     load_categories()
     default_csv_path = './data/data.csv'
+    out_csv_path = './data/classification.csv'
     if os.path.exists(default_csv_path):
         load_csv_data(default_csv_path)
+        load_out_csv(out_csv_path)
     
     app.run(debug=True, host='0.0.0.0', port=5000)
