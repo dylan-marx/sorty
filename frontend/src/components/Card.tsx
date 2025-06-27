@@ -30,75 +30,58 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
 
     // TODO make this more robust
     const parseTextToReadable = (rawText: string): string => {
-        if (Array.isArray(rawText)) {
-            return rawText.map((item: string, index: number) => {
-                const cleanText = item
-                    .replace(/\*\*(.*?)\*\*/g, '$1')
-                    .replace(/\*(.*?)\*/g, '$1')
-                    .replace(/`(.*?)`/g, '$1')
-                    .replace(/^\s*#+\s*/gm, '')
-                    .replace(/^\s*-\s*/gm, '• ')
-                    .replace(/^\s*\*\s*/gm, '• ')
-                    .replace(/^\s*\d+\.\s*/gm, (match) => match)
-                    .trim();
-                
-                return `--- Response ${index + 1} ---\n${cleanText}`;
-            }).join('\n\n' + '─'.repeat(40) + '\n\n');
-        }
+    if (Array.isArray(rawText)) {
+        return rawText.map(item => cleanText(item)).join('\n\n');
+    }
 
-        if (typeof rawText === 'string') {
-
-            if (rawText.trim().startsWith('[')) {
-                try {
-                    let jsonString = rawText;
-
-                    let textArray;
-                    try {
-                        textArray = JSON.parse(jsonString);
-                    } catch (e) {
-                        const matches = jsonString.match(/"((?:[^"\\]|\\.)*)"/g);
-                        if (matches) {
-                            textArray = matches.map(match => 
-                                match.slice(1, -1) // Remove quotes
-                                    .replace(/\\"/g, '"')
-                                    .replace(/\\n/g, '\n')
-                                    .replace(/\\t/g, '\t')
-                                    .replace(/\\\\/g, '\\')
-                            );
-                        } else {
-                            throw new Error('Could not extract array elements');
-                        }
-                    }
-                    return textArray.map((item: string, index: number) => {
-                        const cleanText = item
-                            .replace(/\*\*(.*?)\*\*/g, '$1')
-                            .replace(/\*(.*?)\*/g, '$1')
-                            .replace(/`(.*?)`/g, '$1') 
-                            .replace(/^\s*#+\s*/gm, '')
-                            .replace(/^\s*-\s*/gm, '• ')
-                            .replace(/^\s*\*\s*/gm, '• ')
-                            .trim();
-                        
-                        return `--- Response ${index + 1} ---\n${cleanText}`;
-                    }).join('\n\n' + '─'.repeat(40) + '\n\n');
-                    
-                } catch (error) {
-                    console.warn('JSON parsing failed, treating as plain text');
-                }
-            }
-
-            return rawText
-                .replace(/\*\*(.*?)\*\*/g, '$1')
-                .replace(/\*(.*?)\*/g, '$1')
-                .replace(/`(.*?)`/g, '$1')
-                .replace(/^\s*#+\s*/gm, '')
-                .replace(/^\s*-\s*/gm, '• ')
-                .replace(/^\s*\*\s*/gm, '• ')
-                .trim();
-        }
-
+    if (typeof rawText !== 'string') {
         return String(rawText);
-    };
+    }
+
+    let current = rawText.trim();
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    while (attempts < maxAttempts) {
+        try {
+            const parsed = JSON.parse(current);
+            
+            if (typeof parsed === 'string') {
+                current = parsed;
+                attempts++;
+                continue;
+            }
+            
+            if (Array.isArray(parsed)) {
+                return parsed.map(item => cleanText(item)).join('\n\n');
+            }
+            
+            return cleanText(parsed);
+            
+        } catch (e) {
+            break;
+        }
+    }
+
+    // If JSON parsing failed, just clean the text directly
+    return cleanText(current);
+};
+
+const cleanText = (text: string): string => {
+    return text
+        .replace(/\\n/g, '\n')
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\')
+        .replace(/\\t/g, '\t')
+        .replace(/"{2,}/g, '"')
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/`(.*?)`/g, '$1')
+        .replace(/^\s*#+\s*/gm, '') 
+        .replace(/^\s*[-*]\s*/gm, '• ') 
+        .trim();
+};
+
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!cardRef.current) return;
