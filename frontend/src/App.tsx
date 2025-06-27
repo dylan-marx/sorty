@@ -114,7 +114,7 @@ function App() {
   return (
     <>
       <div className='header'>
-        Data Classifier
+        Sorty
       </div>
       <div className='flex-container'>
         <div className='category-collection-container'>

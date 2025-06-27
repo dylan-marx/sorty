@@ -157,7 +157,6 @@ const cleanText = (text: string): string => {
     transform: isDragging ? 'translate(-50%, -50%)' : undefined
     };
 
-    // Parse the text for display
     const displayText = parseTextToReadable(text);
 
     return (
