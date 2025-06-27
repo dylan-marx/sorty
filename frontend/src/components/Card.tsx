@@ -28,6 +28,78 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
     hasMoved: false
     });
 
+    // TODO make this more robust
+    const parseTextToReadable = (rawText: string): string => {
+        if (Array.isArray(rawText)) {
+            return rawText.map((item: string, index: number) => {
+                const cleanText = item
+                    .replace(/\*\*(.*?)\*\*/g, '$1')
+                    .replace(/\*(.*?)\*/g, '$1')
+                    .replace(/`(.*?)`/g, '$1')
+                    .replace(/^\s*#+\s*/gm, '')
+                    .replace(/^\s*-\s*/gm, '• ')
+                    .replace(/^\s*\*\s*/gm, '• ')
+                    .replace(/^\s*\d+\.\s*/gm, (match) => match)
+                    .trim();
+                
+                return `--- Response ${index + 1} ---\n${cleanText}`;
+            }).join('\n\n' + '─'.repeat(40) + '\n\n');
+        }
+
+        if (typeof rawText === 'string') {
+
+            if (rawText.trim().startsWith('[')) {
+                try {
+                    let jsonString = rawText;
+
+                    let textArray;
+                    try {
+                        textArray = JSON.parse(jsonString);
+                    } catch (e) {
+                        const matches = jsonString.match(/"((?:[^"\\]|\\.)*)"/g);
+                        if (matches) {
+                            textArray = matches.map(match => 
+                                match.slice(1, -1) // Remove quotes
+                                    .replace(/\\"/g, '"')
+                                    .replace(/\\n/g, '\n')
+                                    .replace(/\\t/g, '\t')
+                                    .replace(/\\\\/g, '\\')
+                            );
+                        } else {
+                            throw new Error('Could not extract array elements');
+                        }
+                    }
+                    return textArray.map((item: string, index: number) => {
+                        const cleanText = item
+                            .replace(/\*\*(.*?)\*\*/g, '$1')
+                            .replace(/\*(.*?)\*/g, '$1')
+                            .replace(/`(.*?)`/g, '$1') 
+                            .replace(/^\s*#+\s*/gm, '')
+                            .replace(/^\s*-\s*/gm, '• ')
+                            .replace(/^\s*\*\s*/gm, '• ')
+                            .trim();
+                        
+                        return `--- Response ${index + 1} ---\n${cleanText}`;
+                    }).join('\n\n' + '─'.repeat(40) + '\n\n');
+                    
+                } catch (error) {
+                    console.warn('JSON parsing failed, treating as plain text');
+                }
+            }
+
+            return rawText
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\*(.*?)\*/g, '$1')
+                .replace(/`(.*?)`/g, '$1')
+                .replace(/^\s*#+\s*/gm, '')
+                .replace(/^\s*-\s*/gm, '• ')
+                .replace(/^\s*\*\s*/gm, '• ')
+                .trim();
+        }
+
+        return String(rawText);
+    };
+
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!cardRef.current) return;
         
@@ -102,6 +174,9 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
     transform: isDragging ? 'translate(-50%, -50%)' : undefined
     };
 
+    // Parse the text for display
+    const displayText = parseTextToReadable(text);
+
     return (
         <div
         ref={cardRef}
@@ -118,9 +193,10 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
                         <span className="card-id">#{id}</span>
                         <span className="card-column">{columnName}</span>
                     </div>
-                    <div className="text">{text}</div>
+                    <div className="text" style={{ whiteSpace: 'pre-line' }}>
+                        {displayText}
+                    </div>
                 </div>
-
             }
         </div>
     );
