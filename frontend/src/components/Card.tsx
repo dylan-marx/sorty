@@ -1,4 +1,7 @@
 import React, { CSSProperties, useCallback, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import '../style/Card.css';
 
 interface CardType {
@@ -18,80 +21,69 @@ interface Position {
 
 function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnName}: CardType) {
     const [isDragging, setIsDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
     const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
     const cardRef = useRef<HTMLDivElement>(null);
     const prevDropTargetRef = useRef<Element | null>(null);
     const dragDataRef = useRef({
-    startPos: { x: 0, y: 0 },
-    offset: { x: 0, y: 0 },
-    hasMoved: false
+        startPos: { x: 0, y: 0 },
+        offset: { x: 0, y: 0 },
+        hasMoved: false
     });
 
-    // TODO make this more robust
     const parseTextToReadable = (rawText: string): string => {
-    if (Array.isArray(rawText)) {
-        return rawText.map(item => cleanText(item)).join('\n\n');
-    }
+        let processedText = rawText.replace(/\\n/g, '\n');
 
-    if (typeof rawText !== 'string') {
-        return String(rawText);
-    }
-
-    let current = rawText.trim();
-    let attempts = 0;
-    const maxAttempts = 5;
-
-    while (attempts < maxAttempts) {
-        try {
-            const parsed = JSON.parse(current);
-            
-            if (typeof parsed === 'string') {
-                current = parsed;
-                attempts++;
-                continue;
-            }
-            
-            if (Array.isArray(parsed)) {
-                return parsed.map(item => cleanText(item)).join('\n\n');
-            }
-            
-            return cleanText(parsed);
-            
-        } catch (e) {
-            break;
+        processedText = processedText
+            .replace(/^\[\s*"/, '')  
+            .replace(/"\s*\]$/, '');
+        if (Array.isArray(rawText)) {
+            return rawText.map(entry => 
+                typeof entry === 'string' ? entry.replace(/^"|"$/g, '') : String(entry)
+            ).join('\n\n---------------------------------\n\n');
         }
-    }
 
-    // If JSON parsing failed, just clean the text directly
-    return cleanText(current);
-};
+        let isJsonArray = false;
+        if (processedText.trim().startsWith('[') || /^".*",\s*".*"$/.test(processedText)) {
+            try {
+                const parsed = JSON.parse(`[${processedText}]`);
+                if (Array.isArray(parsed)) {
+                    isJsonArray = true;
+                    return parsed.map(entry => 
+                        typeof entry === 'string' ? entry : JSON.stringify(entry)
+                    ).join('\n\n---------------------------------\n\n');
+                }
+            } catch (e) {
+                // TODO handle json failing
+            }
+        }
+ 
+        if (!isJsonArray && processedText.includes('", ')) {
+            return processedText.split('", ')
+                .map(entry => {
 
-const cleanText = (text: string): string => {
-    return text
-        .replace(/\\n/g, '\n')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
-        .replace(/\\t/g, '\t')
-        .replace(/"{2,}/g, '"')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        .replace(/`(.*?)`/g, '$1')
-        .replace(/^\s*#+\s*/gm, '') 
-        .replace(/^\s*[-*]\s*/gm, '• ') 
-        .trim();
-};
+                    let cleanEntry = entry.trim();
+                    cleanEntry = cleanEntry.replace(/^"+|"+$/g, ''); 
+                    cleanEntry = cleanEntry.replace(/^,+|,+$/g, '');
+                    return cleanEntry;
+                })
+                .filter(entry => entry.length > 0)
+                .join('\n\n---------------------------------\n\n');
+        }
 
+        return processedText
+            .replace(/^"+|"+$/g, '')
+            .replace(/^,+|,+$/g, '')
+            .replace(/\n{3,}/g, '\n\n'); 
+    };
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!cardRef.current) return;
         
         const rect = cardRef.current.getBoundingClientRect();
-
         dragDataRef.current = {
-        startPos: { x: e.clientX, y: e.clientY },
-        offset: { x: e.clientX - rect.left, y: e.clientY - rect.top },
-        hasMoved: false
+            startPos: { x: e.clientX, y: e.clientY },
+            offset: { x: e.clientX - rect.left, y: e.clientY - rect.top },
+            hasMoved: false
         };
         
         document.addEventListener('mousemove', handleMouseMove);
@@ -104,9 +96,9 @@ const cleanText = (text: string): string => {
         const deltaY = e.clientY - dragDataRef.current.startPos.y;
 
         if (!dragDataRef.current.hasMoved && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-        dragDataRef.current.hasMoved = true;
-        setIsDragging(true);
-        onDragStart?.(e);
+            dragDataRef.current.hasMoved = true;
+            setIsDragging(true);
+            onDragStart?.(e);
         }
 
         if (dragDataRef.current.hasMoved) {
@@ -135,7 +127,6 @@ const cleanText = (text: string): string => {
         document.removeEventListener('mouseup', handleMouseUp);
         
         if (dragDataRef.current.hasMoved) {
-            // Check drop target
             const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
             const dropTarget = elementsBelow.find(el => el.classList.contains('drop-target'));
             
@@ -151,35 +142,39 @@ const cleanText = (text: string): string => {
     }, [handleMouseMove, onDragEnd, onDrop]);
 
     const cardStyle: CSSProperties = {
-    position: isDragging ? 'fixed' : 'relative',
-    left: isDragging ? `${position.x}px` : 'auto',
-    top: isDragging ? `${position.y}px` : 'auto',
-    transform: isDragging ? 'translate(-50%, -50%)' : undefined
+        position: isDragging ? 'fixed' : 'relative',
+        left: isDragging ? `${position.x}px` : 'auto',
+        top: isDragging ? `${position.y}px` : 'auto',
+        transform: isDragging ? 'translate(-50%, -50%)' : undefined
     };
 
     const displayText = parseTextToReadable(text);
 
     return (
         <div
-        ref={cardRef}
-        className={`Card ${isDragging ? 'dragging' : ''} ${className}`}
-        style={cardStyle}
-        onMouseDown={handleMouseDown}
+            ref={cardRef}
+            className={`Card ${isDragging ? 'dragging' : ''} ${className}`}
+            style={cardStyle}
+            onMouseDown={handleMouseDown}
         >
-            {
-            isDragging ? 
-                <div className="text">...</div> 
-                :
+            {isDragging ? (
+                <div className="text">...</div>
+            ) : (
                 <div>
                     <div className="card-header">
                         <span className="card-id">#{id}</span>
                         <span className="card-column">{columnName}</span>
                     </div>
-                    <div className="text" style={{ whiteSpace: 'pre-line' }}>
-                        {displayText}
+                    <div className="card-markdown">
+                        <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                        >
+                            {displayText}
+                        </ReactMarkdown>
                     </div>
                 </div>
-            }
+            )}
         </div>
     );
 }

@@ -119,7 +119,7 @@ def get_next_row():
             row_data[column] = None
         else:
             row_data[column] = str(value)
-
+            
     response_data = {
         'row_number': current_row_index + 1,
         'total_rows': total_rows,
@@ -160,8 +160,6 @@ def get_status():
     })
 
 
-
-@app.route('/api/classify', methods=['POST'])
 @app.route('/api/classify', methods=['POST'])
 def classify_data():
     global out_csv, csv_data
@@ -240,10 +238,9 @@ def get_next_cell():
         return jsonify({
             'error': 'No output CSV loaded. Please load output CSV first.'
         }), 400
-    
-    # Function to check if a cell is already classified
+
     def is_cell_classified(row_idx, col_name):
-        if col_name == 'id':  # Skip ID column - it's not for classification
+        if col_name == 'id': 
             return True
         
         try:
@@ -251,18 +248,15 @@ def get_next_cell():
             row_mask = out_csv['id'].astype(str) == row_id
             if row_mask.any():
                 cell_value = out_csv.loc[row_mask, col_name].iloc[0]
-                # Consider cell classified if it has any non-null value
                 return pd.notna(cell_value) and cell_value != '' and cell_value is not None
         except:
             pass
         return False
-    
-    # Always search from the beginning to find the first unclassified cell
+
     for row_idx in range(total_rows):
         for col_idx in range(total_columns):
             column_name = columns[col_idx]
-            
-            # Check if current cell is already classified
+
             if not is_cell_classified(row_idx, column_name):
                 # Found the first unclassified cell, return it
                 row = csv_data.iloc[row_idx]
@@ -274,6 +268,7 @@ def get_next_cell():
                 else:
                     cell_value = str(value)
 
+                print(cell_value)
                 response_data = {
                     'id': str(row['id']),
                     'row_number': row_idx + 1,

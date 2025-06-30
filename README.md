@@ -1,10 +1,11 @@
-# data classification
----
-## 📝 Project Spec
+# Sorty
 
-### 🔧 **Stack**
+A drag-and-drop UI for manually classifying text data from CSVs.
 
-* **Frontend**: HTML, CSS, TypeScript
+
+### **Stack**
+
+* **Frontend**: React (TypeScript), HTML, CSS
 * **Backend**: Flask (Python)
 * **Data**: CSVs handled with Pandas
 
@@ -29,17 +30,26 @@ Navigate to the `backend` directory and run the following command.
 
 ```bash
 # Run backend serving up input CSV and writing to output CSV
+cd backend
+
+# Install dependencies
+pip install -r requirements.txt
+
 python app.py
 ```
 
-Navigate to the `frontend`, then run the following commands.
+Navigate to the `frontend` directory, then run the following commands.
 
 ```bash
+cd frontend
+
 # Install dependencies
 npm install
 
 # Start UI
-npm start
+npm run start
+
+# Visit http://localhost:3000
 ```
 ---
 
@@ -71,13 +81,13 @@ npm start
 
     * Contains the id and the category
 
-        | id | category           |
-        | -- | --------------- |
-        | 1  | "Positive" |
+      | id | category  |
+      |----|-----------|
+      | 1  | Positive  |
 
 
-## ✅ To do
 
-- Add Keyboard short cuts to further streamline
-- Add Undo/Skip
----
+## ✅ To Do
+
+- Add keyboard shortcuts to streamline classification
+- Add Undo/Skip functionality

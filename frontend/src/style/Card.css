@@ -93,3 +93,47 @@
   font-style: italic;
   color: #dcdcaa;
 }
+
+.card-markdown {
+  padding: 8px;
+}
+
+.card-markdown p {
+  margin: 4px 0;
+}
+
+.card-markdown ul, 
+.card-markdown ol {
+  padding-left: 20px;
+  margin: 6px 0;
+}
+
+.card-markdown pre {
+  background: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  overflow: auto;
+}
+
+.card-markdown code {
+  font-family: monospace;
+  background: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.card-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.card-markdown th, 
+.card-markdown td {
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+}
+
+.card-markdown th {
+  background-color: #f2f2f2;
+}
