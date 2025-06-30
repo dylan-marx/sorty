@@ -268,7 +268,6 @@ def get_next_cell():
                 else:
                     cell_value = str(value)
 
-                print(cell_value)
                 response_data = {
                     'id': str(row['id']),
                     'row_number': row_idx + 1,
