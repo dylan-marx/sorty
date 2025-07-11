@@ -70,13 +70,9 @@ function CategoryCard({
         try {
           await sendClassification(text);
           console.log(`Successfully classified as: ${text}`);
-          
-          // You might want to emit an event or call a callback here
-          // to notify the parent component that classification is complete
-          
+
         } catch (error) {
           console.error('Failed to send classification:', error);
-          // Handle error (show notification, etc.)
         }
       };
 
@@ -93,7 +89,7 @@ function CategoryCard({
         }
       };
 
-      // Register the drop handler
+
       registerDropHandler(text, onDrop);
 
       // Add event listeners for visual feedback
@@ -102,7 +98,6 @@ function CategoryCard({
       cardElement.addEventListener('dragleave', onDragLeave);
       cardElement.addEventListener('drop', onDrop);
 
-      // Cleanup
       return () => {
         if (cardElement) {
           cardElement.removeEventListener('dragover', onDragOver);

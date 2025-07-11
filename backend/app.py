@@ -1,8 +1,9 @@
 import json
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import pandas as pd
 import os
+import tempfile
 
 app = Flask(__name__)
 CORS(app)
@@ -14,6 +15,8 @@ total_rows = 0
 columns = []
 categories = []
 classifications = []
+out_csv = None
+out_csv_path = None
 
 out_csv = None
 
@@ -248,7 +251,10 @@ def get_next_cell():
             row_mask = out_csv['id'].astype(str) == row_id
             if row_mask.any():
                 cell_value = out_csv.loc[row_mask, col_name].iloc[0]
-                return pd.notna(cell_value) and cell_value != '' and cell_value is not None
+                return (pd.notna(cell_value) and 
+                        (cell_value != '') and 
+                        cell_value is not None and 
+                        str(cell_value).upper() != 'SKIP')
         except:
             pass
         return False
@@ -287,6 +293,71 @@ def get_next_cell():
         'error': 'No more unclassified data available',
         'message': 'All cells have been classified'
     }), 404
+
+current_output_path = None
+
+@app.route('/api/upload-files', methods=['POST'])
+def upload_files():
+    global current_output_path
+    
+    try:
+        # Get files from request
+        input_file = request.files['input']
+        output_file = request.files['output']
+        
+        # Create temp directory
+        temp_dir = tempfile.mkdtemp()
+        input_path = os.path.join(temp_dir, 'input.csv')
+        output_path = os.path.join(temp_dir, 'output.csv')
+        
+        # Save files
+        input_file.save(input_path)
+        output_file.save(output_path)
+        
+        # Update global reference
+        current_output_path = output_path
+        
+        # Load files into the application
+        if load_csv_data(input_path) and load_out_csv(output_path):
+            return jsonify({
+                'message': 'Files uploaded and processed successfully',
+                'temp_dir': temp_dir
+            }), 200
+        else:
+            return jsonify({
+                'error': 'Failed to process CSV files'
+            }), 500
+            
+    except KeyError:
+        return jsonify({
+            'error': 'Missing input or output file in request'
+        }), 400
+    except Exception as e:
+        return jsonify({
+            'error': f'Error processing files: {str(e)}'
+        }), 500
+
+@app.route('/api/download-output', methods=['GET'])
+def download_output():
+    global current_output_path
+    
+    if not current_output_path or not os.path.exists(current_output_path):
+        return jsonify({
+            'error': 'Output file not available. Please upload files first.'
+        }), 404
+    
+    try:
+        return send_file(
+            current_output_path,
+            as_attachment=True,
+            download_name='output.csv',
+            mimetype='text/csv'
+        )
+    except Exception as e:
+        return jsonify({
+            'error': f'Error downloading file: {str(e)}'
+        }), 500
+
 if __name__ == '__main__':
     load_categories()
     default_csv_path = './data/data.csv'

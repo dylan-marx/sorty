@@ -39,7 +39,7 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
         if (Array.isArray(rawText)) {
             return rawText.map(entry => 
                 typeof entry === 'string' ? entry.replace(/^"|"$/g, '') : String(entry)
-            ).join('\n\n---------------------------------\n\n');
+            ).join('\n\n---------------------------------\n\n \n\n---------------------------------\n\n');
         }
 
         let isJsonArray = false;
@@ -50,10 +50,10 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
                     isJsonArray = true;
                     return parsed.map(entry => 
                         typeof entry === 'string' ? entry : JSON.stringify(entry)
-                    ).join('\n\n---------------------------------\n\n');
+                    ).join('\n\n---------------------------------\n\n \n\n---------------------------------\n\n');
                 }
             } catch (e) {
-                // TODO handle json failing
+                return rawText;
             }
         }
  
@@ -67,7 +67,7 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
                     return cleanEntry;
                 })
                 .filter(entry => entry.length > 0)
-                .join('\n\n---------------------------------\n\n');
+                .join('\n\n---------------------------------\n\n \n\n---------------------------------\n\n');
         }
 
         return processedText
@@ -147,8 +147,13 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
         top: isDragging ? `${position.y}px` : 'auto',
         transform: isDragging ? 'translate(-50%, -50%)' : undefined
     };
-
-    const displayText = parseTextToReadable(text);
+    let displayText;
+    if (text == null) {
+      displayText = 'No text found';
+    } else {
+      displayText = parseTextToReadable(text);
+    }
+    
 
     return (
         <div
@@ -170,7 +175,7 @@ function Card({text, onDragStart, onDragEnd, onDrop, className='', id, columnNam
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeRaw]}
                         >
-                            {displayText}
+                            {displayText || 'No text found'}
                         </ReactMarkdown>
                     </div>
                 </div>

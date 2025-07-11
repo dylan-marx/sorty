@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Card from './components/Card';
 import './style/App.css';
 import CategoryCollection from './components/CategoryCollection';
+import FileSelector from './components/CSVFileUploader';
 
 type DropHandler = (event: MouseEvent) => void;
 type DropHandlers = Record<string, DropHandler>;
@@ -10,7 +11,6 @@ function App() {
   const [dropHandlers, setDropHandlers] = useState<DropHandlers>({});
   const [apiStatus, setApiStatus] = useState<string>('Checking...');
   const hasFetchedRef = useRef(false);
-  const isFetchingRef = useRef(false); // Add this to prevent concurrent calls
   const [totalRows, setTotalRows] = useState<number | null>(null);
   const [totalColumns, setTotalColumns] = useState<number | null>(null);
   const [totalEntries, setTotalEntries] = useState<number | null>(null);
@@ -21,35 +21,34 @@ function App() {
   const [rowNumber, setRowNumber] = useState<string>('');
   const [currentEntry, setCurrentEntry] = useState<string>('');
   const [cardText, setCardText] = useState<string>('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const fetchCell = async () => {
     try {
-    let data;
-    do {
-      const res = await fetch('http://localhost:5000/api/next-cell');
-      data = await res.json();
-      console.log('Fetched cell:', data);
-    } while (data.column_name === 'id'); // Skip id columns
-    
-    setCardID(data.id);
-    setColumnName(data.column_name);
-    setCardText(data.cell_value);
-    setColumnNumber(data.column_number);
-    setRowNumber(data.row_number);
-  } catch (error) {
-    console.error('Error fetching cell:', error);
-  }
+      let data;
+      do {
+        const res = await fetch('http://localhost:5000/api/next-cell');
+        data = await res.json();
+        console.log('Fetched cell:', data);
+      } while (data.column_name === 'id'); // Skip id columns
+      
+      setCardID(data.id);
+      setColumnName(data.column_name);
+      setCardText(data.cell_value);
+      setColumnNumber(data.column_number);
+      setRowNumber(data.row_number);
+    } catch (error) {
+      console.error('Error fetching cell:', error);
+    }
   };
 
   useEffect(() => {
-
     const currentEntryNumber = (Number(rowNumber) - 1) * Number(totalColumns) + Number(columnNumber);
     setCurrentEntry(String(currentEntryNumber-1));
-    console.log('Current entry:', currentEntryNumber);
-  }, [rowNumber, columnNumber, totalColumns])
+  }, [rowNumber, columnNumber, totalColumns]);
 
   useEffect(() => {
-    if (hasFetchedRef.current) return; // Prevent multiple calls
+    if (hasFetchedRef.current) return;
     
     fetch('http://localhost:5000/api/status')
       .then((res) => {
@@ -114,65 +113,89 @@ function App() {
   return (
     <>
       <div className='header'>
-        Sorty
+        <span>Sorty</span>
+        <button 
+          className={`menu-toggle ${isMenuOpen ? 'open' : ''}`}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? '✕' : '☰'}
+        </button>
       </div>
-      <div className='flex-container'>
-        <div className='category-collection-container'>
-          <CategoryCollection id={cardID} columnName={columnName} categories={categories} registerDropHandler={registerDropHandler} />
+      
+      <div className={`side-menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)}>
+        <div className={`side-menu ${isMenuOpen ? 'open' : ''}`} onClick={e => e.stopPropagation()}>
+          <div className="menu-content">
+            <h3>Dataset Tools</h3>
+            <FileSelector />
+            <div className='menu-stats'>
+              <div className='api-status'>{apiStatus}</div>
+              <div className='stat-item'>
+                <span className='stat-label'>Rows:</span>
+                <span className='stat-value'>{totalRows || '—'}</span>
+              </div>
+              <div className='stat-item'>
+                <span className='stat-label'>Columns:</span>
+                <span className='stat-value'>{totalColumns || '—'}</span>
+              </div>
+              <div className='stat-item'>
+                <span className='stat-label'>Total Entries:</span>
+                <span className='stat-value'>{totalEntries || '—'}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className='card-container'>
-          <Card
-            id={cardID}
-            columnName={columnName}
-            text={cardText}
-            onDrop={handleDrop}
-          />
-        </div>
-        <div className='data-stats'>
-            <div className='api-status'>{apiStatus}</div>
-            <div className='stat-item'>
-              <span className='stat-label'>Rows:</span>
-              <span className='stat-value'>{totalRows || '—'}</span>
-            </div>
-
-            <div className='stat-item'>
-              <span className='stat-label'>Columns:</span>
-              <span className='stat-value'>{totalColumns || '—'}</span>
-            </div>
-
-            <div className='stat-item'>
-              <span className='stat-label'>Total Entries:</span>
-              <span className='stat-value'>{totalEntries || '—'}</span>
-            </div>
-
-            <div className='stat-item'>
-              <span className='stat-label'>Current Entry:</span>
-              <span className='stat-value'>{currentEntry || '—'}</span>
-            </div>
-
-            <div className='stat-item'>
-              <span className='stat-label'>Column Name:</span>
-              <span className='stat-value'>{columnName || '—'}</span>
-            </div>
-
-            <div className='stat-item'>
-              <span className='stat-label'>ID:</span>
-              <span className='stat-value'>{cardID || '—'}</span>
-            </div>
-        </div>
-        
       </div>
-      <div style={{ position: 'relative', width: '100%' }}>
-        <div>
-          <progress className='progress'
-          value={Number(currentEntry) / (totalEntries || 1)}/>
+      
+      <div className='app-container'>
+        <div className='main-content'>
+          <div className='flex-container'>
+            <div className='category-collection-container'>
+              <CategoryCollection 
+                id={cardID} 
+                columnName={columnName} 
+                categories={categories} 
+                registerDropHandler={registerDropHandler} 
+              />
+            </div>
+            
+            <div className='card-area'>
+              <div className='card-container'>
+                <Card
+                  id={cardID}
+                  columnName={columnName}
+                  text={cardText}
+                  onDrop={handleDrop}
+                />
+              </div>
+              
+              <div className='progress-container'>
+                <progress 
+                  className='progress'
+                  value={Number(currentEntry) / (totalEntries || 1)}
+                />
+                <span className='progress-percentage'>
+                  {Math.round((Number(currentEntry) / (totalEntries || 1)) * 100)}%
+                </span>
+              </div>
+            </div>
+            
+            <div className='data-stats'>
+              <div className='stat-item'>
+                <span className='stat-label'>Current Entry:</span>
+                <span className='stat-value'>{currentEntry || '—'}</span>
+              </div>
+              <div className='stat-item'>
+                <span className='stat-label'>Column Name:</span>
+                <span className='stat-value'>{columnName || '—'}</span>
+              </div>
+              <div className='stat-item'>
+                <span className='stat-label'>ID:</span>
+                <span className='stat-value'>{cardID || '—'}</span>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <span className='progress-percentage'>
-          {Math.round((Number(currentEntry) / (totalEntries || 1)) * 100)}%
-        </span>
       </div>
-
     </>
   );
 }
